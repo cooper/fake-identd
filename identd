@@ -1,0 +1,30 @@
+#!/usr/bin/perl
+
+use strict;
+use warnings;
+use IO::Socket;
+
+my($client,$socket);
+if (!defined($ARGV[0])) { die "Please supply ident\n"; }
+my $ident=$ARGV[0];
+$socket = IO::Socket::INET->new(
+        "Proto" => "tcp",
+        "LocalPort" => 113,
+        Reuse => 1,
+        "Listen" => 1) or die "Error: $!\n";
+print "using ident: $ident\n"; 
+while ($client=$socket->accept()) {
+        my $host=$client->peerhost();
+        print "connection: ", $host . "\n";
+	my $data = <$client>;
+	if ($data) {
+		print "$host recv: $data\n";
+		$data =~ s/^\s+//;
+		$data =~ s/\s+$//;
+		$ident =~ s/^\s+//;
+		$ident =~ s/\s+$//;
+		print $client "$data : USERID : UNIX : $ident\n";
+		close $client;
+	}
+}
+undef $client if $client;
